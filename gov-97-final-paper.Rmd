@@ -1,0 +1,19 @@
+---
+title: "Gov 97 Final Analysis"
+author: "Garrett Rolph"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(janitor)
+library(readxl)
+```
+
+```{r}
+senator_tweets <- read_excel("senator-tweets-about-judiciary (1).xlsx")
+survey <- read_csv("anes_2016.csv")
+cces_survey <- read_csv("cumulative_2006_2017.csv.crdownload")
+```
+
