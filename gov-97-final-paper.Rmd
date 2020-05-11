@@ -5,59 +5,19 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 library(tidyverse)
 library(janitor)
 library(readxl)
 ```
 
-```{r}
+```{r Reading in data, include = F}
 senator_tweets <- read_excel("senator-tweets-about-judiciary (1).xlsx")
 survey <- read_csv("anes_2016.csv")
 cces_survey <- read_csv("cumulative_2006_2017.csv.crdownload")
 ```
 
-```{r}
-tweets_with_attitudes <- senator_tweets %>% 
-  mutate(neg_attitude =
-           if_else(str_detect(text, c("undermined", "undermine", "at odds", 
-                                      "disappointed", "ignored", "blocks",
-                                      "partisan", "power grab", "myth", "glad",
-                                      "politicization", "mandate", "mandated",
-                                      "troubling", "misguided", "support of overturning",
-                                      "erroneous", "justice delayed", "deserve greater transparency", "loss", "love won", "gutted", "gutting",
-                                      "outrageous oppression", "upholding nationwide subsidies",
-                                      "rejects Oklahoma", "unravel", "corrosive power",
-                                      "fix this", "got it wrong", "got #HobbyLobby wrong",
-                                      "I am concerned", "was wrong", "struck down a key section", "shut the door", "disastrous", "overturn Citizens United",
-                                      "The real loser in today", "damaging law",
-                                      "ruling does not repudiate")),
-                   "negative", NA_character_),
-         pos_attitude = 
-           if_else(str_detect(text, c("great", "two thumbs up", "recognizes",
-                                      "good news", "thank you", "welcome news",
-                                      "Pleased", "pleased", "integrity", "follows the law",
-                                      "following the law", "affirm", "affirmed",
-                                      "equality", "ensure", "proud", "agree", "victory",
-                                      "against", "equity", "respect", "abide by",
-                                      "applaud the", "forward to override", "vote to override",
-                                      "religious liberty", "welcomed", "Applaud", 
-                                      "unanimously that segregation", "deals major blow",
-                                      "a good step in", "support this decision", "declined to hear", "rejected the NC", "I support the Supreme Court",
-                                      "blocks implementation of", "Marriage Act unconstitutional",
-                                      "cheering", "right conclusion", "confirmed today it",
-                                      "Supreme Court Reins in", "Supreme Court Rebukes",
-                                      "Good to see", "decision to block @EPA", 
-                                      "unanimously agreed", "in Brown", "Praises",
-                                      "Commends", "affirmed again", "Applauds", 
-                                      "access to abortion is a woman", "unanimously rebuked",
-                                      "regulations on hold", "outlawed segregation", 
-                                      "#ACAWorks", "halts EPA", "religious freedom should be protected")),
-                   "positive", NA_character_))
-        
-```
-
-```{r}
+```{r Setting buzzwords, include = F}
 i1 <- grepl('at odds', senator_tweets$text) | grepl('disappointed', senator_tweets$text) |
       grepl('undermined', senator_tweets$text) | grepl('undermine', senator_tweets$text) |
       grepl('ignored', senator_tweets$text) | grepl('blocks', senator_tweets$text) |
@@ -118,7 +78,7 @@ i2 <- grepl('great', senator_tweets$text) | grepl('two thumbs up', senator_tweet
       grepl('religious freedom should be protected', senator_tweets$text)
 ```
 
-```{r}
+```{r Cleaning data}
 case_tweets <- senator_tweets %>% 
   mutate(thoughts_neg = i1,
          thoughts_neg = str_replace(thoughts_neg, "TRUE", "negative"),
@@ -127,15 +87,29 @@ case_tweets <- senator_tweets %>%
          thoughts = case_when(
            thoughts_neg == "negative" & thoughts_pos == "FALSE" ~ "negative",
            thoughts_pos == "positive" & thoughts_neg == "FALSE" ~ "positive",
-           thoughts_pos == "FALSE" & thoughts_neg == "FALSE" ~ "neutral"),
+           thoughts_pos == "FALSE" & thoughts_neg == "FALSE" ~ "neutral",
+           thoughts_pos == "positive" & thoughts_neg == "negative" ~ "neutral"),
          prelim_thoughts = case_when(thoughts == "positive" ~ 1,
                                      thoughts == "neutral" ~ 0,
-                                     thoughts == "negative" ~ -1)
-  )
+                                     thoughts == "negative" ~ -1)) %>% 
+  group_by(state) %>% 
+  mutate(average_sen_approval = 
+           mean(prelim_thoughts))
 
-case_tweets %>% 
-  group_by(thoughts) %>% 
-  count()
+west <- c("CA", "WA", "OR", "NV", "MT", "ID",
+          "WY", "CO", "NM", "AZ", "AK", "HI")
+
+south <- c("TX", "OK", "LA", "MO", "MS", "AL", "GA", "FL", "KY",
+           "TN", "SC", "NC")
+
+midwest <- c("ND", "SD", "NE", "KS", "MN", "WI", "MI", "OH", "IN", "IO",
+             "OH")
+
+mid_atlantic <- c("NY", "VA", "PA", "MD", "DE")
+
+northeast <- c("CN", "MA", "NH", "ME", "RI")
+
+region <- as.tibble(c(west, midwest, south, northeast, mid_atlantic))
 
 public_court <- survey %>% 
   select(V162102, V162093, V161010d) %>% 
@@ -210,17 +184,19 @@ public_court <- survey %>%
          supreme_court = 
            str_replace(supreme_court, "998. Don't know", NA_character_)) %>% 
   na.omit() 
-
-unique(public_court$roberts)
 ```
 
 ```{r}
-public_court %>% 
+public_averages <- public_court %>% 
   group_by(state) %>% 
   mutate(supreme_court = as.numeric(as.character(supreme_court)),
-         average_court_rating = (mean(supreme_court))) %>% View()
+         average_court_rating = (mean(supreme_court)),
+         roberts = as.numeric(as.character(roberts)),
+         average_roberts_approval = mean(roberts))
 
-unique(public_court$supreme_court)
+public_averages %>% 
+  ggplot(aes(average_roberts_approval, average_court_rating)) +
+  geom_text(aes(label = state), position = "dodge", size = 3) 
 ```
 
 List of potential words for negative Senator tweets: undermine(d), at odds, disappointed, 
