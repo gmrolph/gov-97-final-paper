@@ -17,3 +17,232 @@ survey <- read_csv("anes_2016.csv")
 cces_survey <- read_csv("cumulative_2006_2017.csv.crdownload")
 ```
 
+```{r}
+tweets_with_attitudes <- senator_tweets %>% 
+  mutate(neg_attitude =
+           if_else(str_detect(text, c("undermined", "undermine", "at odds", 
+                                      "disappointed", "ignored", "blocks",
+                                      "partisan", "power grab", "myth", "glad",
+                                      "politicization", "mandate", "mandated",
+                                      "troubling", "misguided", "support of overturning",
+                                      "erroneous", "justice delayed", "deserve greater transparency", "loss", "love won", "gutted", "gutting",
+                                      "outrageous oppression", "upholding nationwide subsidies",
+                                      "rejects Oklahoma", "unravel", "corrosive power",
+                                      "fix this", "got it wrong", "got #HobbyLobby wrong",
+                                      "I am concerned", "was wrong", "struck down a key section", "shut the door", "disastrous", "overturn Citizens United",
+                                      "The real loser in today", "damaging law",
+                                      "ruling does not repudiate")),
+                   "negative", NA_character_),
+         pos_attitude = 
+           if_else(str_detect(text, c("great", "two thumbs up", "recognizes",
+                                      "good news", "thank you", "welcome news",
+                                      "Pleased", "pleased", "integrity", "follows the law",
+                                      "following the law", "affirm", "affirmed",
+                                      "equality", "ensure", "proud", "agree", "victory",
+                                      "against", "equity", "respect", "abide by",
+                                      "applaud the", "forward to override", "vote to override",
+                                      "religious liberty", "welcomed", "Applaud", 
+                                      "unanimously that segregation", "deals major blow",
+                                      "a good step in", "support this decision", "declined to hear", "rejected the NC", "I support the Supreme Court",
+                                      "blocks implementation of", "Marriage Act unconstitutional",
+                                      "cheering", "right conclusion", "confirmed today it",
+                                      "Supreme Court Reins in", "Supreme Court Rebukes",
+                                      "Good to see", "decision to block @EPA", 
+                                      "unanimously agreed", "in Brown", "Praises",
+                                      "Commends", "affirmed again", "Applauds", 
+                                      "access to abortion is a woman", "unanimously rebuked",
+                                      "regulations on hold", "outlawed segregation", 
+                                      "#ACAWorks", "halts EPA", "religious freedom should be protected")),
+                   "positive", NA_character_))
+        
+```
+
+```{r}
+i1 <- grepl('at odds', senator_tweets$text) | grepl('disappointed', senator_tweets$text) |
+      grepl('undermined', senator_tweets$text) | grepl('undermine', senator_tweets$text) |
+      grepl('ignored', senator_tweets$text) | grepl('blocks', senator_tweets$text) |
+      grepl('partisan', senator_tweets$text) | grepl('power grab', senator_tweets$text) |
+      grepl('myth', senator_tweets$text) | grepl('glad', senator_tweets$text) |
+      grepl('politicization', senator_tweets$text) | grepl('mandate', senator_tweets$text) |
+      grepl('mandated', senator_tweets$text) | grepl('troubling', senator_tweets$text) |
+      grepl('misguided', senator_tweets$text) | grepl('support of overturning', senator_tweets$text) | grepl('justice delayed', senator_tweets$text) |
+      grepl('erroneous', senator_tweets$text) | grepl('loss', senator_tweets$text) |
+      grepl('deserve greater transparency', senator_tweets$text) |
+      grepl('love won', senator_tweets$text) | grepl('gutted', senator_tweets$text) |
+      grepl('gutting', senator_tweets$text) | grepl('outrageous oppression', senator_tweets$text) | grepl('upholding nationwide subsidies', senator_tweets$text) | 
+      grepl('rejects Oklahoma', senator_tweets$text) | grepl('unravel', senator_tweets$text) |
+      grepl('corrosive power', senator_tweets$text) | grepl('fix this', senator_tweets$text) |
+      grepl('got it wrong', senator_tweets$text) | grepl('got #HobbyLobby wrong', senator_tweets$text) | grepl('I am concerned', senator_tweets$text) |
+      grepl('was wrong', senator_tweets$text) |  
+      grepl('struck down a key section', senator_tweets$text) |
+      grepl('shut the door', senator_tweets$text) | grepl('disastrous', senator_tweets$text) |
+      grepl('overturn Citizens United', senator_tweets$text) |
+      grepl('The real loser in today', senator_tweets$text) |
+      grepl('ruling does not repudiate', senator_tweets$text) |
+      grepl('damaging law', senator_tweets$text)
+  
+i2 <- grepl('great', senator_tweets$text) | grepl('two thumbs up', senator_tweets$text) |
+      grepl('recognizes', senator_tweets$text) | grepl('good news', senator_tweets$text) |
+      grepl('thank you', senator_tweets$text) | grepl('welcome news', senator_tweets$text) |
+      grepl('Pleased', senator_tweets$text) | grepl('pleased', senator_tweets$text) |
+      grepl('integrity', senator_tweets$text) | grepl('follows the law', senator_tweets$text) |
+      grepl('following the law', senator_tweets$text) | 
+      grepl('affirm', senator_tweets$text) | grepl('affirmed', senator_tweets$text) | grepl('equality', senator_tweets$text) | grepl('ensure', senator_tweets$text) | grepl('proud', senator_tweets$text) | grepl('agree', senator_tweets$text) | grepl('victory', senator_tweets$text) | grepl('against', senator_tweets$text) | grepl('equity', senator_tweets$text) | grepl('respect', senator_tweets$text) | 
+      grepl('abide by', senator_tweets$text) | grepl('applaud the', senator_tweets$text) | grepl('forward to override', senator_tweets$text) |
+      grepl('vote to override', senator_tweets$text) | 
+      grepl('religious liberty', senator_tweets$text) | 
+      grepl('welcomed', senator_tweets$text) | grepl('Applaud', senator_tweets$text) |
+      grepl('unanimously that segregation', senator_tweets$text) | 
+      grepl('deals major blow', senator_tweets$text) |
+      grepl('a good step in', senator_tweets$text) | 
+      grepl('support this decision', senator_tweets$text) |
+      grepl('declined to hear', senator_tweets$text) | 
+      grepl('rejected the NC', senator_tweets$text) |
+      grepl('I support the Supreme Court', senator_tweets$text) | 
+      grepl('blocks implementation of', senator_tweets$text) |
+      grepl('Marriage Act unconstitutional', senator_tweets$text) | 
+      grepl('cheering', senator_tweets$text) | grepl('right conclusion', senator_tweets$text) | grepl('confirmed today it', senator_tweets$text) |
+      grepl('Supreme Court Reins in', senator_tweets$text) | 
+      grepl('Supreme Court Rebukes', senator_tweets$text) |
+      grepl('Good to see', senator_tweets$text) | 
+      grepl('decision to block @EPA', senator_tweets$text) |
+      grepl('unanimously agreed', senator_tweets$text) | 
+      grepl('in Brown', senator_tweets$text) |
+      grepl('Praises', senator_tweets$text) | grepl('Commends', senator_tweets$text) |
+      grepl('affirmed again', senator_tweets$text) | grepl('Applauds', senator_tweets$text) |
+      grepl('access to abortion is a woman', senator_tweets$text) | 
+      grepl('unanimously rebuked', senator_tweets$text) |
+      grepl('regulations on hold', senator_tweets$text) | 
+      grepl('outlawed segregation', senator_tweets$text) |
+      grepl('#ACAWorks', senator_tweets$text) | grepl('halts EPA', senator_tweets$text) |
+      grepl('religious freedom should be protected', senator_tweets$text)
+```
+
+```{r}
+case_tweets <- senator_tweets %>% 
+  mutate(thoughts_neg = i1,
+         thoughts_neg = str_replace(thoughts_neg, "TRUE", "negative"),
+         thoughts_pos = i2,
+         thoughts_pos = str_replace(thoughts_pos, "TRUE", "positive"),
+         thoughts = case_when(
+           thoughts_neg == "negative" & thoughts_pos == "FALSE" ~ "negative",
+           thoughts_pos == "positive" & thoughts_neg == "FALSE" ~ "positive",
+           thoughts_pos == "FALSE" & thoughts_neg == "FALSE" ~ "neutral"),
+         prelim_thoughts = case_when(thoughts == "positive" ~ 1,
+                                     thoughts == "neutral" ~ 0,
+                                     thoughts == "negative" ~ -1)
+  )
+
+case_tweets %>% 
+  group_by(thoughts) %>% 
+  count()
+
+public_court <- survey %>% 
+  select(V162102, V162093, V161010d) %>% 
+  rename(state = "V161010d",
+         roberts = "V162093",
+         supreme_court = "V162102") %>% 
+  mutate(state = str_replace(state, "22. Louisiana", "LA"),
+         state = str_replace(state, "5. Arkansas", "AR"),
+         state = str_replace(state, "28. Mississippi", "MI"),
+         state = str_replace(state, "47. Tennessee", "TN"),
+         state = str_replace(state, "39. Ohio", "OH"),
+         state = str_replace(state, "34. New Jersey", "NJ"),
+         state = str_replace(state, "36. New York", "NY"),
+         state = str_replace(state, "48. Texas", "TX"),
+         state = str_replace(state, "37. North Carolina", "NC"),
+         state = str_replace(state, "9. Connecticut", "CN"),
+         state = str_replace(state, "20. Kansas", "KS"),
+         state = str_replace(state, "25. Massachusetts", "MA"),
+         state = str_replace(state, "11. Washington DC", "DC"),
+         state = str_replace(state, "35. New Mexico", "NM"),
+         state = str_replace(state, "53. Washington", "WA"),
+         state = str_replace(state, "4. Arizona", "AZ"),
+         state = str_replace(state, "42. Pennsylvania", "PA"),
+         state = str_replace(state, "12. Florida", "FL"),
+         state = str_replace(state, "17. Illinois", "IL"),
+         state = str_replace(state, "8. Colorado", "CO"),
+         state = str_replace(state, "22. Louisiana", "LA"),
+         state = str_replace(state, "13. Georgia", "GA"),
+         state = str_replace(state, "55. Wisconsin", "WI"),
+         state = str_replace(state, "40. Oklahoma", "OK"),
+         state = str_replace(state, "6. California", "CA"),
+         state = str_replace(state, "22. Louisiana", "LA"),
+         state = str_replace(state, "24. Maryland", "MD"),
+         state = str_replace(state, "45. South Carolina", "SC"),
+         state = str_replace(state, "18. Indiana", "IN"),
+         state = str_replace(state, "27. Minnesota", "MN"),
+         state = str_replace(state, "16. Idaho", "ID"),
+         state = str_replace(state, "33. New Hampshire", "NH"),
+         state = str_replace(state, "51. Virginia", "VA"),
+         state = str_replace(state, "26. Michigan", "MI"),
+         state = str_replace(state, "32. Nevada", "NV"),
+         state = str_replace(state, "54. West Virginia", "WV"),
+         state = str_replace(state, "41. Oregon", "OR"),
+         state = str_replace(state, "21. Kentucky", "KY"),
+         state = str_replace(state, "1. Alabama", "AL"),
+         state = str_replace(state, "19. Iowa", "IO"),
+         state = str_replace(state, "15. Hawaii", "HI"),
+         state = str_replace(state, "23. Maine", "ME"),
+         state = str_replace(state, "50. Vermont", "VT"),
+         state = str_replace(state, "49. Utah", "UT"),
+         state = str_replace(state, "10. Delaware", "DE"),
+         state = str_replace(state, "44. Rhode Island", "RI"),
+         state = str_replace(state, "29. Missouri", "MO"),
+         state = str_replace(state, "38. North Dakota", "ND"),
+         state = str_replace(state, "56. Wyoming", "WY"),
+         state = str_replace(state, "30. Montana", "MT"),
+         state = str_replace(state, "46. South Dakota", "SD"),
+         state = str_replace(state, "31. Nebraska", "NE"),
+         state = str_replace(state, "2. Alaska", "AK"),
+         roberts = str_replace(roberts, "-6. No post-election interview", NA_character_),
+         roberts = str_replace(roberts, "-9. Refused", NA_character_),
+         roberts = str_replace(roberts, "999. Don't recognize", 
+                               NA_character_),
+         roberts = str_replace(roberts, "998. Don't know", NA_character_),
+         supreme_court = 
+           str_replace(supreme_court, "-6. No post-election interview", NA_character_),
+         supreme_court = 
+           str_replace(supreme_court, "-7. No post data, deleted due to incomplete IW",
+                       NA_character_),
+         supreme_court = 
+           str_replace(supreme_court, "-9. Refused", NA_character_),
+         supreme_court = 
+           str_replace(supreme_court, "998. Don't know", NA_character_)) %>% 
+  na.omit() 
+
+unique(public_court$roberts)
+```
+
+```{r}
+public_court %>% 
+  group_by(state) %>% 
+  mutate(supreme_court = as.numeric(as.character(supreme_court)),
+         average_court_rating = (mean(supreme_court))) %>% View()
+
+unique(public_court$supreme_court)
+```
+
+List of potential words for negative Senator tweets: undermine(d), at odds, disappointed, 
+ignored, blocks, partisan, power grab, myth, glad, politicization, mandate(d), troubling,
+misguided, support of overturning, erroneous, justice delayed, deserve greater transparency,
+loss, love won, gut(ted)(ing), outrageous oppression, upholding nationwide subsidies, 
+rejects Oklahoma, unravel, corrosive power, fix this, got it wrong, got #HobbyLobby wrong,
+I am concerned, was wrong, struck down a key section, shut the door, disastrous, 
+overturn Citizens United, The real loser in today, damaging law, ruling does not repudiate,
+blame, 
+
+Neutral list? Historic, upholds, (goes two ways: support(ed)(ing))
+
+List of potential words for positive Senator tweets: great, two thumbs up, recognizes, 
+good news, thank you, welcome news, P(p)leased, integrity, follow(s)(ing) the law, 
+affirm(ed), equality, ensure, proud, agree, major victory, fight against, against, 
+equity, respect, abide by, applaud the, forward to override, vote to override, 
+religious liberty, welcomed, Applaud, unanimously that segregation, deals major blow, 
+a good step in, support this decision, declined to hear, rejected the NC, 
+I support the Supreme Court, blocks implementation of, Marriage Act unconstitutional,
+cheering, right conclusion, confirmed today it, Supreme Court Reins in, 
+Supreme Court Rebukes, Good to see, decision to block @EPA, unanimously agreed, 
+in Brown, Praises, Commends, affirmed again, Applauds, access to abortion is a woman,
+unanimously rebuked, regulations on hold, outlawed segregation, #ACAWorks, 
+halts EPA, religious freedom should be protected, 
