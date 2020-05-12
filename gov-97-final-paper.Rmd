@@ -78,7 +78,7 @@ i2 <- grepl('great', senator_tweets$text) | grepl('two thumbs up', senator_tweet
       grepl('religious freedom should be protected', senator_tweets$text)
 ```
 
-```{r Cleaning data}
+```{r Cleaning tweets and setting regions}
 case_tweets <- senator_tweets %>% 
   mutate(thoughts_neg = i1,
          thoughts_neg = str_replace(thoughts_neg, "TRUE", "negative"),
@@ -90,30 +90,97 @@ case_tweets <- senator_tweets %>%
            thoughts_pos == "FALSE" & thoughts_neg == "FALSE" ~ "neutral",
            thoughts_pos == "positive" & thoughts_neg == "negative" ~ "neutral"),
          prelim_thoughts = case_when(thoughts == "positive" ~ 1,
-                                     thoughts == "neutral" ~ 0,
-                                     thoughts == "negative" ~ -1)) %>% 
+                                     thoughts == "neutral" ~ 0.5,
+                                     thoughts == "negative" ~ 0)) %>% 
   group_by(state) %>% 
   mutate(average_sen_approval = 
-           mean(prelim_thoughts))
+           mean(prelim_thoughts)*100)
 
-west <- c("CA", "WA", "OR", "NV", "MT", "ID",
+unique(case_tweets$average_sen_approval)
+
+West <- 1:12
+South <- 13:25
+Midwest <- 26:37
+Mid_atlantic <- 38:43
+Northeast <- 44:48
+
+west <- c("CA", "WA", "OR", "NV", "MT", "ID", "UT",
           "WY", "CO", "NM", "AZ", "AK", "HI")
 
-south <- c("TX", "OK", "LA", "MO", "MS", "AL", "GA", "FL", "KY",
-           "TN", "SC", "NC")
+south <- c("TX", "OK", "LA", "MO", "MS", "AL", "GA", 
+           "FL", "KY", "TN", "SC", "NC", "AR")
 
-midwest <- c("ND", "SD", "NE", "KS", "MN", "WI", "MI", "OH", "IN", "IO",
-             "OH")
+midwest <- c("ND", "SD", "NE", "KS", "MN", "WI", "MI", "OH", "IN", "IO", "IL")
 
-mid_atlantic <- c("NY", "VA", "PA", "MD", "DE")
+mid_atlantic <- c("NY", "VA", "PA", "MD", "DE", "DC", "NJ", "WV")
 
-northeast <- c("CN", "MA", "NH", "ME", "RI")
+northeast <- c("CT", "MA", "NH", "ME", "RI", "VT")
 
-region <- as.tibble(c(west, midwest, south, northeast, mid_atlantic))
+region <- as.tibble(c(west, south, midwest, mid_atlantic, northeast))
 
+region <- region %>% 
+  rename(state = "value") %>% 
+  mutate(region = 
+           case_when(
+             state == "CA" ~ "West",
+             state == "WA" ~ "West",
+             state == "OR" ~ "West",
+             state == "NV" ~ "West",
+             state == "MT" ~ "West",
+             state == "ID" ~ "West",
+             state == "WY" ~ "West",
+             state == "CO" ~ "West",
+             state == "NM" ~ "West",
+             state == "UT" ~ "West",
+             state == "AZ" ~ "West",
+             state == "AK" ~ "West",
+             state == "HI" ~ "West",
+             state == "TX" ~ "South",
+             state == "OK" ~ "South",
+             state == "LA" ~ "South",
+             state == "MO" ~ "South",
+             state == "MS" ~ "South",
+             state == "AL" ~ "South",
+             state == "GA" ~ "South",
+             state == "FL" ~ "South",
+             state == "KY" ~ "South",
+             state == "TN" ~ "South",
+             state == "SC" ~ "South",
+             state == "NC" ~ "South",
+             state == "AR" ~ "South",
+             state == "ND" ~ "Midwest",
+             state == "SD" ~ "Midwest",
+             state == "NE" ~ "Midwest",
+             state == "KS" ~ "Midwest",
+             state == "MN" ~ "Midwest",
+             state == "WI" ~ "Midwest",
+             state == "MI" ~ "Midwest",
+             state == "OH" ~ "Midwest",
+             state == "IN" ~ "Midwest",
+             state == "IA" ~ "Midwest",
+             state == "IL" ~ "Midwest",
+             state == "NY" ~ "Mid-Atlantic",
+             state == "VA" ~ "Mid-Atlantic",
+             state == "PA" ~ "Mid-Atlantic",
+             state == "MD" ~ "Mid-Atlantic",
+             state == "DE" ~ "Mid-Atlantic",
+             state == "DC" ~ "Mid-Atlantic",
+             state == "NJ" ~ "Mid-Atlantic",
+             state == "WV" ~ "Mid-Atlantic",
+             state == "CT" ~ "Northeast",
+             state == "MA" ~ "Northeast",
+             state == "NH" ~ "Northeast",
+             state == "ME" ~ "Northeast",
+             state == "RI" ~ "Northeast",
+             state == "VT" ~ "Northeast"
+           ))
+```
+
+```{r Cleaning survey}
 public_court <- survey %>% 
-  select(V162102, V162093, V161010d) %>% 
-  rename(state = "V161010d",
+  select(V160001, V162102, V162093, V161010d) %>% 
+  rename(id = "V160001",
+         state = "V161010d",
          roberts = "V162093",
          supreme_court = "V162102") %>% 
   mutate(state = str_replace(state, "22. Louisiana", "LA"),
@@ -125,7 +192,7 @@ public_court <- survey %>%
          state = str_replace(state, "36. New York", "NY"),
          state = str_replace(state, "48. Texas", "TX"),
          state = str_replace(state, "37. North Carolina", "NC"),
-         state = str_replace(state, "9. Connecticut", "CN"),
+         state = str_replace(state, "9. Connecticut", "CT"),
          state = str_replace(state, "20. Kansas", "KS"),
          state = str_replace(state, "25. Massachusetts", "MA"),
          state = str_replace(state, "11. Washington DC", "DC"),
@@ -155,7 +222,7 @@ public_court <- survey %>%
          state = str_replace(state, "41. Oregon", "OR"),
          state = str_replace(state, "21. Kentucky", "KY"),
          state = str_replace(state, "1. Alabama", "AL"),
-         state = str_replace(state, "19. Iowa", "IO"),
+         state = str_replace(state, "19. Iowa", "IA"),
          state = str_replace(state, "15. Hawaii", "HI"),
          state = str_replace(state, "23. Maine", "ME"),
          state = str_replace(state, "50. Vermont", "VT"),
@@ -186,17 +253,158 @@ public_court <- survey %>%
   na.omit() 
 ```
 
-```{r}
-public_averages <- public_court %>% 
+```{r Court versus Roberts}
+state_join <- public_court %>% 
+  full_join(region, by = "state")
+
+public_averages <- state_join %>% 
   group_by(state) %>% 
   mutate(supreme_court = as.numeric(as.character(supreme_court)),
          average_court_rating = (mean(supreme_court)),
          roberts = as.numeric(as.character(roberts)),
-         average_roberts_approval = mean(roberts))
+         average_roberts_approval = mean(roberts)) %>% 
+  na.omit()
+
+unique(public_averages$state)
 
 public_averages %>% 
+  rename(Region = "region") %>% 
   ggplot(aes(average_roberts_approval, average_court_rating)) +
-  geom_text(aes(label = state), position = "dodge", size = 3) 
+  geom_text(aes(label = state, color = Region), size = 3) +
+  theme_classic() +
+  labs(title = "Citizens' Approval of the Supreme Court and John Roberts by State",
+       x = "Average approval of Chief Justice Roberts",
+       y = "Average approval of the Supreme Court") +
+  theme(legend.title.align = 0.5) +
+  expand_limits(x = c(50,70), y = c(50, 75))
+
+```
+
+```{r Adding regions, joining data}
+final_tweets <- case_tweets %>% 
+  mutate(region = 
+           case_when(
+             state == "CA" ~ "West",
+             state == "WA" ~ "West",
+             state == "OR" ~ "West",
+             state == "NV" ~ "West",
+             state == "MT" ~ "West",
+             state == "ID" ~ "West",
+             state == "WY" ~ "West",
+             state == "CO" ~ "West",
+             state == "NM" ~ "West",
+             state == "UT" ~ "West",
+             state == "AZ" ~ "West",
+             state == "AK" ~ "West",
+             state == "HI" ~ "West",
+             state == "TX" ~ "South",
+             state == "OK" ~ "South",
+             state == "LA" ~ "South",
+             state == "MO" ~ "South",
+             state == "MS" ~ "South",
+             state == "AL" ~ "South",
+             state == "GA" ~ "South",
+             state == "FL" ~ "South",
+             state == "KY" ~ "South",
+             state == "TN" ~ "South",
+             state == "SC" ~ "South",
+             state == "NC" ~ "South",
+             state == "AR" ~ "South",
+             state == "ND" ~ "Midwest",
+             state == "SD" ~ "Midwest",
+             state == "NE" ~ "Midwest",
+             state == "KS" ~ "Midwest",
+             state == "MN" ~ "Midwest",
+             state == "WI" ~ "Midwest",
+             state == "MI" ~ "Midwest",
+             state == "OH" ~ "Midwest",
+             state == "IN" ~ "Midwest",
+             state == "IA" ~ "Midwest",
+             state == "IL" ~ "Midwest",
+             state == "NY" ~ "Mid-Atlantic",
+             state == "VA" ~ "Mid-Atlantic",
+             state == "PA" ~ "Mid-Atlantic",
+             state == "MD" ~ "Mid-Atlantic",
+             state == "DE" ~ "Mid-Atlantic",
+             state == "DC" ~ "Mid-Atlantic",
+             state == "NJ" ~ "Mid-Atlantic",
+             state == "WV" ~ "Mid-Atlantic",
+             state == "CT" ~ "Northeast",
+             state == "MA" ~ "Northeast",
+             state == "NH" ~ "Northeast",
+             state == "ME" ~ "Northeast",
+             state == "RI" ~ "Northeast",
+             state == "VT" ~ "Northeast"
+           )) %>% 
+  rename(id = "user",
+         average_court_rating = "average_sen_approval") %>% 
+  select(id, state, average_court_rating, region)
+
+final_public <- public_averages %>% 
+  mutate(id = as.character(id)) %>% 
+  select(id, state, average_court_rating, region)
+
+senators <- c("amyklobuchar", "ChrisCoons", "ChrisVanHollen", "ChuckGrassley",
+              "InhofePress", "JeffFlake", "JerryMoran", "JohnBoozman",
+              "JohnCornyn", "LindseyGrahamSC", "lisamurkowski",
+              "MarkWarner", "MartinHeinrich", "maziehirono", "McCaskillOffice",
+              "McConnellPress", "MikeCrapo", "PattyMurray", "RandPaul", 
+              "RonWyden", "RoyBlunt", "Sen_JoeManchin", "SenAlexander",
+              "SenAngusKing", "SenatorBaldwin", "SenatorBurr", "SenatorCantwell",
+              "SenatorCardin", "SenatorCarper", "SenatorCollins", "SenatorDurbin",
+              "SenatorEnzi", "SenatorFischer", "SenatorHassan", "SenatorHeitkamp",
+              "SenatorIsakson", "SenatorLankford", "SenatorLeahy", "SenatorMenendez",
+              "SenatorRisch", "SenatorRounds", "SenatorShaheen", "SenatorStrange",
+              "SenatorTester", "SenatorTimScott", "SenatorTomUdall", "SenatorWicker",
+              "SenBennetCO", "SenBillNelson", "SenBlumenthal", "SenBobCasey",
+              "SenBobCorker", "SenBooker", "SenBrianSchatz", "SenCapito",
+              "SenCortezMasto", "SenCoryGardner", "SenDanSullivan", "sendavidperdue",
+              "SenDeanHeller", "SenDonnelly", "SenDuckworth", "SenFeinstein", 
+              "SenFranken", "SenGaryPeters", "SenGillibrand", "SenJackReed",
+              "SenJeffMerkley", "SenJohnBarrasso", "SenJohnHoeven", "SenJohnKennedy",
+              "SenJohnMcCain", "SenJohnThune", "SenJoniErnst", "SenKamalaHarris",
+              "SenMarkey", "SenMikeLee", "SenMurphyOffice", "senorrinhatch",
+              "SenPatRoberts", "senrobportman", "SenRonJohnson", "SenRubioPress",
+              "SenSanders", "SenSasse", "SenSchumer", "SenShelby", "SenSherrodBrown",
+              "SenStabenow", "SenTedCruz", "SenThadCochran", "SenThomTillis",
+              "SenToddYoung", "SenTomCotton", "SenToomey", "SenWarren",
+              "SenWhitehouse", "SteveDaines", "timkaine")
+
+all_data <- bind_rows(final_tweets, final_public) %>% 
+  na.omit() %>% 
+  distinct() %>% 
+  mutate(role = 
+           case_when(
+             id %in% senators ~ "Senator",
+             !id %in% senators ~ "Citizen"))
+```
+
+```{r Plotting opinions}
+
+all_data %>% 
+  group_by(state) %>% 
+  ggplot(aes(state, average_court_rating, color = role)) + geom_point() +
+  theme_classic() + 
+  labs(title = "Distance between Senators' and Citizens' approval of Supreme Court",
+       y = "Court Approval",
+       x = "State") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  geom_line(aes(group = state))
+
+all_data %>% 
+  group_by(state, id) %>% 
+  ggplot(aes(state, average_court_rating, color = role)) + geom_point() +
+  theme_classic() + 
+  labs(title = "Concurrence between public and Senators",
+       subtitle = "Vertical lines show distance between citizens' and 
+senators' approval of the Supreme Court",
+       y = "Court Approval",
+       x = "State") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  facet_wrap(~role) +
+  theme(axis.text.x = element_blank(),
+        legend.position = 'none') 
+
 ```
 
 List of potential words for negative Senator tweets: undermine(d), at odds, disappointed, 
