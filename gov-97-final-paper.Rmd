@@ -110,7 +110,7 @@ west <- c("CA", "WA", "OR", "NV", "MT", "ID", "UT",
 south <- c("TX", "OK", "LA", "MO", "MS", "AL", "GA", 
            "FL", "KY", "TN", "SC", "NC", "AR")
 
-midwest <- c("ND", "SD", "NE", "KS", "MN", "WI", "MI", "OH", "IN", "IO", "IL")
+midwest <- c("ND", "SD", "NE", "KS", "MN", "WI", "MI", "OH", "IN", "IA", "IL")
 
 mid_atlantic <- c("NY", "VA", "PA", "MD", "DE", "DC", "NJ", "WV")
 
@@ -185,7 +185,7 @@ public_court <- survey %>%
          supreme_court = "V162102") %>% 
   mutate(state = str_replace(state, "22. Louisiana", "LA"),
          state = str_replace(state, "5. Arkansas", "AR"),
-         state = str_replace(state, "28. Mississippi", "MI"),
+         state = str_replace(state, "28. Mississippi", "MS"),
          state = str_replace(state, "47. Tennessee", "TN"),
          state = str_replace(state, "39. Ohio", "OH"),
          state = str_replace(state, "34. New Jersey", "NJ"),
@@ -381,29 +381,68 @@ all_data <- bind_rows(final_tweets, final_public) %>%
 
 ```{r Plotting opinions}
 
-all_data %>% 
+difference_graph <- all_data %>% 
   group_by(state) %>% 
-  ggplot(aes(state, average_court_rating, color = role)) + geom_point() +
+  rename(Role = "role") %>% 
+  ggplot(aes(state, average_court_rating, color = Role)) + geom_point() +
   theme_classic() + 
   labs(title = "Distance between Senators' and Citizens' approval of Supreme Court",
        y = "Court Approval",
        x = "State") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  geom_line(aes(group = state))
+  geom_line(aes(group = state)) +
+  theme(legend.title.align = 0.5) 
 
-all_data %>% 
+difference_graph
+
+difference_graph %>% 
+  ggsave(filename = file.path("difference_graph.png"))
+
+faceted <- all_data %>% 
   group_by(state, id) %>% 
   ggplot(aes(state, average_court_rating, color = role)) + geom_point() +
   theme_classic() + 
   labs(title = "Concurrence between public and Senators",
-       subtitle = "Vertical lines show distance between citizens' and 
-senators' approval of the Supreme Court",
        y = "Court Approval",
        x = "State") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   facet_wrap(~role) +
   theme(axis.text.x = element_blank(),
-        legend.position = 'none') 
+        legend.position = 'none') +
+  theme(legend.title.align = 0.5) 
+
+faceted
+
+
+faceted %>% 
+  ggsave(filename = file.path("faceted.png"))
+
+final_ed_tweets <- final_tweets %>% 
+  select(-id) %>% 
+  distinct()
+
+final_pub_averages <- final_public %>% 
+  select(-id) %>% 
+  distinct()
+
+differences <- final_ed_tweets %>% 
+  full_join(final_pub_averages, by = "state", suffix = c("_sen", "_cit")) %>% 
+  mutate(difference = (average_court_rating_sen - average_court_rating_cit))
+
+differences_graph <- differences %>% 
+  ggplot(aes(state, difference)) + geom_col() + 
+  theme_bw() +
+  labs(title = "Difference between Senatorial and constituents' Court approval",
+       subtitle = "Where positive values signify Senators that approve of the Court more",
+       y = "Discrepancy (% approval)",
+       x = "State") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+differences_graph
+
+differences_graph %>% 
+  ggsave(filename = file.path("differences.png"))
+
 
 ```
 
